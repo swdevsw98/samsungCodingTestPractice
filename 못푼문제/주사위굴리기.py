@@ -1,40 +1,43 @@
-n, m, x, y, k = map(int, input().split()) # n = 세로 m = 가로 주사위(x,y) 액션갯수 k
-maps = [ list(map(int, input().split())) for _ in range(n) ]
-actions = list(map(int, input().split())) # 1 = 동 2 = 서 3 = 북 4 = 남
-dia = [0] * 6 # 배열값 = 주사위 위치 0 = 1 , 1 = 2, 2 = 3, 3 = 4, 4 = 5, 5 = 6
-step = [(2,3,1,4), (2,3,5,0), (5,0,1,4), (0,5,1,4), (2,3,0,5), (2,3,4,1)]
-res = [5,4,3,2,1,0]
-now = (x,y)
-diaNow = 0
+n, m, x, y, k = map(int, input().split())
 
+board = []
+dx = [0, 0, -1, 1]
+dy = [1, -1, 0, 0]
+dice = [0, 0, 0, 0, 0, 0]
 
-for i in actions:
-    x, y = now[0], now[1]
-    if i == 1: #동
-        nx = x + 1
-        ny = y
-    elif i == 2: #서
-        nx = x - 1
-        ny = 0
-    elif i == 3: #북
-        nx = x
-        ny = y - 1
-    elif i == 4: #남
-        nx = x
-        ny = y + 1
+def turn(dir):
+    a, b, c, d, e, f = dice[0], dice[1], dice[2], dice[3], dice[4], dice[5]
+    if dir == 1: #동
+        dice[0], dice[1], dice[2], dice[3], dice[4], dice[5] = d, b, a, f, e, c
 
-    if nx < 0 and ny < 0 and nx > m and ny > n:
+    elif dir == 2: #서
+        dice[0], dice[1], dice[2], dice[3], dice[4], dice[5] = c, b, f, a, e, d
+
+    elif dir == 3: #북
+        dice[0], dice[1], dice[2], dice[3], dice[4], dice[5] = e, a, c, d, f, b
+
+    else:
+        dice[0], dice[1], dice[2], dice[3], dice[4], dice[5] = b, f, c, d, a, e
+
+for i in range(n):
+    board.append(list(map(int, input().split())))
+
+comm = list(map(int, input().split()))
+
+nx, ny = x, y
+for i in comm:
+    nx += dx[i-1]
+    ny += dy[i-1]
+
+    if nx < 0 or nx >= n or ny < 0 or ny >= m:
+        nx -= dx[i-1]
+        ny -= dy[i-1]
         continue
+    turn(i)
+    if board[nx][ny] == 0:
+        board[nx][ny] = dice[-1]
+    else:
+        dice[-1] = board[nx][ny]
+        board[nx][ny] = 0
 
-    now = (nx, ny)
-    diaNow = step[diaNow][i - 1]
-
-    print(now, diaNow, dia)
-
-    if maps[ny][nx] == 0:
-        maps[ny][nx] = dia[diaNow]
-    else :
-        dia[diaNow] = maps[ny][nx]
-        maps[ny][nx] = 0
-
-    print(dia[res[diaNow - 1] - 1])
+    print(dice[0])
