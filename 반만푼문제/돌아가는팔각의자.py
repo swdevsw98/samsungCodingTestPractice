@@ -1,54 +1,54 @@
-# c[0]은 1번째 테이블 사람
-c = [list(map(int, input())) for _ in range(4)]  # 0 = 12시방향 , 2 = 3시 방향, 4 = 6시 방향, 6 = 9시 방향
+grid = [list(map(int,input())) for _ in range(4)]
+
 k = int(input())
-visited = [0] * 4
-res = 0
+rotate_dir = [0 for _ in range(4)]
+ans = 0
+def flip(direction):
+    if direction == 1:
+        return -1
+    else:
+        return 1
+def shift(num, direction):
+    if direction == 1:
+        temp = grid[num][7]
+        for i in range(7,0, -1):
+            grid[num][i]=grid[num][i-1]
+        grid[num][0] = temp
+    else:
+        temp = grid[num][0]
+        for i in range(7):
+            grid[num][i] = grid[num][i+1]
+        grid[num][7] = temp
 
+def simulate(num, direction):
+    global rotate_dir
 
-def turn(d, n):
-    tmp = [0] * 8
-    if d == 1:
-        for i in range(8):
-            if i + 1 > 7:
-                tmp[(i + 1) % 8] = c[n][i]
-            else:
-                tmp[i + 1] = c[n][i]
-    elif d == -1:
-        for i in range(8):
-            if i - 1 < 0:
-                tmp[i + 7] = c[n][i]
-            else:
-                tmp[i - 1] = c[n][i]
-
-    for i in range(8):
-        c[n][i] = tmp[i]
-
-
-def dfs(d, n):
-    # print(d, n, visited)
-    visited[n] += 1
-    if n - 1 >= 0 and c[n - 1][2] != c[n][6] and not visited[n - 1]:
-        # print("n-1")
-        visited[n - 1] += 1
-        dfs(-d, n - 1)
-        turn(-d, n - 1)
-
-    elif n + 1 <= 3 and c[n + 1][6] != c[n][2] and not visited[n + 1]:
-        # print("n+1")
-        visited[n + 1] += 1
-        dfs(-d, n + 1)
-        turn(-d, n + 1)
-
-    if visited[n] == 1:
-        turn(d, n)
-
-
-for i in range(k):
-    n, d = map(int, input().split())
-    dfs(d, n - 1)
+    rotate_dir = [0 for _ in range(4)]
+    rotate_dir[num] = direction
+    for i in range(num-1,-1,-1):
+        if grid[i][2] != grid[i+1][6]:
+            rotate_dir[i] = flip(rotate_dir[i+1])
+        else:
+            break
+    for i in range(num + 1, 4, 1):
+        if grid[i][6] != grid[i-1][2]:
+            rotate_dir[i] = flip(rotate_dir[i-1])
+        else:
+            break
     for i in range(4):
-        visited[i] = 0
-    # print(c)
+        if rotate_dir[i] != 0:
+            shift(i, rotate_dir[i])
 
-res = 1 * c[0][0] + 2 * c[1][0] + 4 * c[2][0] + 8 * c[3][0]
-print(res)
+
+
+
+for _ in range(k):
+    n,d = map(int,input().split())
+    n = n-1
+    simulate(n,d)
+
+for i in range(4):
+
+    if grid[i][0] == 1:
+        ans += 2**i
+print(ans)
