@@ -1,114 +1,70 @@
-n = int(input())
-data = [list(map(int, input().split())) for _ in range(n * n)]
-maps = [[0] * n for _ in range(n)]
-
-dx = [-1, 1, 0, 0]  # 상 하 좌 우
+''' 
+로직 순서:
+1. for x : for y 로 접근
+2. 비어있는 칸 세기 / 인접 좋아하는 친구 세기
+3. (좋아하는 친구, 비어있는 칸, x, y)로 정렬. 많 많 적 적 이 중 첫번째로 이동 
+'''
+dx = [-1, 1, 0, 0]
 dy = [0, 0, -1, 1]
 
 
-# 상하좌우에서 좋아하는 사람수와 빈칸 수 출력
-def checkCount(x, y, idx):
-    blank = 0
-    love = 0
-    for d in range(4):
-        nx = x + dx[d]
-        ny = y + dy[d]
+def place(id):
+    global board
+    cand = []
+    for x in range(n):
+        for y in range(n):
+            empty = 0
+            friends = 0
+            for i in range(4):
+                nx, ny = x + dx[i], y + dy[i]
+                if 0 <= nx < n and 0 <= ny < n:
+                    if board[nx][ny] == 0:
+                        empty += 1
+                    elif board[nx][ny] in graph[id]:
+                        friends += 1
+            cand.append((friends, empty, x, y))
+    cand.sort(key=lambda x: (-x[0], -x[1], x[2], x[3]))
 
-        if 0 <= nx < n and 0 <= ny < n:
-            if maps[nx][ny] == 0:
-                blank += 1
-                continue
-            for l in range(1, 5):
-                if maps[nx][ny] == data[idx][l]:
-                    love += 1
-                    break
-
-    return blank, love
-
-
-for i in range(n * n):
-    count = [[0] * n for _ in range(n)]
-    blankMax = -1
-    loveMax = -1
-    for j in range(n):
-        for k in range(n):
-            # 조건
-            # map에 값이 있으면 건너뛰기
-            if maps[j][k] != 0:
-                count[j][k] = (0, 0)
-                continue
-            # j,k 맵에 i를 넣을때 갯수
-            blank, love = checkCount(j, k, i)
-            blankMax = max(blankMax, blank)
-            loveMax = max(loveMax, love)
-            count[j][k] = (blank, love)
-
-    # 좋아요 max면 푸쉬
-    arr = []
-    for j in range(n):
-        for k in range(n):
-            tmp = count[j][k]
-            if tmp[1] == loveMax and loveMax != 0:
-                arr.append((j, k))
-
-    # 빈칸 체크
-    if len(arr) < 1:
-        for j in range(n):
-            for k in range(n):
-                tmp = count[j][k]
-                if tmp[0] == blankMax and blankMax != 0:
-                    arr.append((j, k))
-
-    # 행 체크
-    if len(arr) > 1:
-        minX = n + 1
-        for idx, val in enumerate(arr):
-            x = val[0]
-            y = val[1]
-            minX = min(minX, x)
-            if minX != x:
-                arr.pop(idx)
-
-    # 열체크
-    if len(arr) > 1:
-        minY = n + 1
-        for idx, val in enumerate(arr):
-            x = val[0]
-            y = val[1]
-            minY = min(minY, y)
-            if minY != y:
-                arr.pop(idx)
-
-    x, y = -1, -1
-    if len(arr) == 0:
-        for j in range(n):
-            for k in range(n):
-                if maps[j][k] == 0:
-                    x = j
-                    y = k
-                    break
-    else:
-        x, y = arr.pop()
-    maps[x][y] = data[i][0]
-
-# 점수 계산
-sum = 0
-for i in range(n):
-    for j in range(n):
-        for k in range(n * n):
-            if maps[i][j] == data[k][0]:
-                blank, love = checkCount(i, j, k)
-                if love == 0:
-                    sum += 0
-                elif love == 1:
-                    sum += 1
-                elif love == 2:
-                    sum += 10
-                elif love == 3:
-                    sum += 100
-                elif love == 4:
-                    sum += 1000
-
-print(sum)
+    # 그자리가 빈칸 아니면 넘어감
+    for c in range(len(cand)):
+        f, e, cx, cy = cand[c]
+        if board[cx][cy]:  # 빈칸 아니면
+            continue
+        else:
+            board[cx][cy] = id
+            break
+    return
 
 
+n = int(input())
+graph = [None for _ in range(n * n + 1)]  # 0~n까지의 학생
+seq = []
+
+for _ in range(n * n):
+    n0, n1, n2, n3, n4 = list(map(int, input().split()))
+    graph[n0] = [n1, n2, n3, n4]
+    seq.append(n0)
+
+board = [[0] * n for _ in range(n)]  # nxn 0은 빈칸
+
+for id in seq:
+    place(id)
+
+score = 0
+score_board = [0, 1, 10, 100, 1000]
+# 인접한 친구에 따라 점수 부여
+for x in range(n):
+    for y in range(n):
+        friends = 0
+        st = board[x][y]
+        if not st:
+            continue
+        for i in range(4):
+            nx, ny = x + dx[i], y + dy[i]
+            if 0 <= nx < n and 0 <= ny < n:
+                if board[nx][ny] in graph[st]:
+                    friends += 1
+
+        score += score_board[friends]
+
+print(score)
